@@ -1,35 +1,118 @@
-//TODO add imports if needed
-//import { exMain } from "./exclude/exampleAss2.js"
-//TODO add/change doc as needed
-/**
- * TODO - Write functional code for this application. You can call any other function, but usage of ".toString(numberSystem)" and "Number.parseInt(number, numberSystem)" is forbidden (only permitted when used on individual digits).
- * The main function which calls the application. 
- * TODO - Please, add specific description here for the application purpose.
- * @param {string} inputNumber number that is being converted
- * @param {number} inputNumberSystem numerical system that the inputNumber is being converted from
- * @param {number} outputNumberSystem numerical system that the inputNumber is being converted into
- * @returns {string} containing number converted to output system
- */
-export function main(inputNumber, inputNumberSystem, outputNumberSystem) {
-  //TODO code
-  //let dtoOut = exMain(inputNumber, inputNumberSystem, outputNumberSystem);
-  return dtoOut;
-}
+// Domácí úkol 2 – Převod čísel mezi číselnými soustavami
+// Využívá Hornerovo schéma pro převod vstupu do desítkové soustavy
+// a opakované dělení pro převod z desítkové do cílové soustavy.
+
+const DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 /**
- * TODO - Change this to contain all input number systems that your application can convert from.
- * Function which returns which number systems are permitted on input.
- * @returns {Array} array of numbers refering to permitted input systems
+ * Povolené vstupní číselné soustavy.
+ * @returns {number[]} Pole povolených základů vstupní soustavy.
  */
 export function permittedInputSystems() {
-	return [10, 2];
+  return Array.from({ length: 35 }, (_, i) => i + 2);
 }
 
 /**
- * TODO - Change this to contain all output number systems that your application can convert to.
- * Function which returns which number systems are permitted on output.
- * @returns {Array} array of numbers refering to permitted output systems
+ * Povolené výstupní číselné soustavy.
+ * @returns {number[]} Pole povolených základů výstupní soustavy.
  */
 export function permittedOutputSystems() {
-	return [10, 2];
+  return Array.from({ length: 35 }, (_, i) => i + 2);
+}
+
+/**
+ * Převede hodnotu jedné číslice na její číselnou hodnotu.
+ * Nepoužívá parseInt – pouze ruční mapování.
+ * @param {string} ch - Znak představující číslici.
+ * @returns {number} Číselná hodnota znaku.
+ */
+function digitToValue(ch) {
+  const lower = ch.toLowerCase();
+  const index = DIGITS.indexOf(lower);
+  if (index === -1) {
+    throw new Error(`Neplatná číslice: '${ch}'`);
+  }
+  return index;
+}
+
+/**
+ * Převede číselnou hodnotu na odpovídající znak číslice.
+ * @param {number} val - Číselná hodnota (0–35).
+ * @returns {string} Znak představující danou číslici.
+ */
+function valueToDigit(val) {
+  if (val < 0 || val >= DIGITS.length) {
+    throw new Error(`Hodnota mimo rozsah: ${val}`);
+  }
+  return DIGITS[val];
+}
+
+/**
+ * Převede číslo zadané jako řetězec ze vstupní soustavy do desítkové
+ * pomocí Hornerova schématu.
+ *
+ * Hornerovo schéma: pro číslo d_n d_{n-1} ... d_1 d_0 v soustavě b
+ *   hodnota = ((...((d_n * b + d_{n-1}) * b + d_{n-2}) * b + ...) * b + d_0)
+ *
+ * @param {string} numberStr - Řetězec představující číslo ve vstupní soustavě.
+ * @param {number} base - Základ vstupní číselné soustavy.
+ * @returns {number} Číslo převedené do desítkové soustavy.
+ */
+function toDecimal(numberStr, base) {
+  let result = 0;
+  for (let i = 0; i < numberStr.length; i++) {
+    const val = digitToValue(numberStr[i]);
+    if (val >= base) {
+      throw new Error(
+        `Číslice '${numberStr[i]}' (hodnota ${val}) není platná v soustavě o základu ${base}.`
+      );
+    }
+    result = result * base + val;
+  }
+  return result;
+}
+
+/**
+ * Převede desítkové číslo do cílové soustavy opakovaným dělením.
+ *
+ * Algoritmus: Opakovaně dělíme číslo základem cílové soustavy,
+ * zbytky (čtené pozpátku) tvoří výsledné číslo.
+ *
+ * @param {number} decimalNumber - Nezáporné celé číslo v desítkové soustavě.
+ * @param {number} base - Základ cílové číselné soustavy.
+ * @returns {string} Řetězec představující číslo v cílové soustavě.
+ */
+function fromDecimal(decimalNumber, base) {
+  if (decimalNumber === 0) {
+    return "0";
+  }
+
+  let digits = "";
+  let num = decimalNumber;
+
+  while (num > 0) {
+    const remainder = num % base;
+    digits = valueToDigit(remainder) + digits;
+    num = Math.floor(num / base);
+  }
+
+  return digits;
+}
+
+/**
+ * Hlavní funkce pro převod čísla mezi číselnými soustavami.
+ *
+ * @param {string} inputNumber - Číslo jako řetězec ve vstupní soustavě.
+ * @param {number} inputNumberSystem - Základ vstupní číselné soustavy.
+ * @param {number} outputNumberSystem - Základ výstupní číselné soustavy.
+ * @returns {string} Převedené číslo jako řetězec v cílové soustavě.
+ */
+export function main(inputNumber, inputNumberSystem, outputNumberSystem) {
+  // Krok 1 - Převod ze vstupní soustavy do desítkové
+  const decimalValue = toDecimal(inputNumber, inputNumberSystem);
+
+  // Krok 2 - Převod z desítkové do výstupní soustavy
+  const result = fromDecimal(decimalValue, outputNumberSystem);
+
+  return result;
 }
